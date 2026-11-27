@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CPU Process Scheduling Simulator · Full-Stack OS Platform</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22%3E%3Crect x=%222%22 y=%222%22 width=%2212%22 height=%2212%22 rx=%222%22 fill=%22%236c8cff%22/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/auth.css" />
+  <link rel="stylesheet" href="css/platform.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <button id="btn-mobile-menu" class="btn icon mobile-menu-btn" type="button" title="Toggle Navigation">☰</button>
+      <span class="logo">⚙</span>
+      <div>
+        <h1>CPU Process Scheduling Simulator</h1>
+        <p class="subtitle">10 Algorithms · DSA Visualiser · Full-Stack OS Learning Platform</p>
+      </div>
+    </div>
+    <div class="header-controls">
+      <button id="btn-theme-toggle" class="btn small" type="button" title="Switch Dark / Light Theme">☀ Light</button>
+      <div id="user-auth-bar" class="auth-user-bar"></div>
+    </div>
+  </header>
+
+  <div class="app-shell">
+    <aside class="sidebar" id="app-sidebar">
+      <div class="sidebar-label">Workspace</div>
+      <nav id="tabs" style="display:flex; flex-direction:column; gap:0.3rem;">
+        <button data-tab="sim" class="nav-item active" type="button">⚙ Simulator</button>
+        <button data-tab="compare" class="nav-item" type="button">📊 Compare &amp; Analytics</button>
+        <button data-tab="dashboard" class="nav-item" type="button">📁 Dashboard &amp; History</button>
+        <button data-tab="learn" class="nav-item" type="button">📘 Learn &amp; Viva Prep</button>
+        <button data-tab="dsa" class="nav-item" type="button">🧩 DSA &amp; Process States</button>
+        <button data-tab="admin" id="nav-admin-btn" class="nav-item hidden" type="button">🛡 Admin Dashboard</button>
+      </nav>
+    </aside>
+
+    <main class="main-content">
+      <!-- ======================= SIMULATOR ======================= -->
+      <section id="tab-sim" class="tab active">
+        <div class="sim-grid">
+          <aside class="panel input-panel">
+            <h3><span class="step">1</span> Add Processes</h3>
+            <form id="proc-form" class="form-grid" autocomplete="off">
+              <label>Arrival Time<input id="f-arrival" type="number" min="0" value="0" required /></label>
+              <label>Burst Time<input id="f-burst" type="number" min="1" value="4" required /></label>
+              <label>Priority <small>(0 = highest)</small><input id="f-priority" type="number" min="0" value="1" required /></label>
+              <label title="Process blocks for I/O after running this many units (0 = no I/O)">I/O after <small>(units, 0 = none)</small><input id="f-ioat" type="number" min="0" value="0" /></label>
+              <label title="How long the process stays in the Waiting state">I/O duration<input id="f-iotime" type="number" min="0" value="0" /></label>
+              <button type="submit" class="btn primary">+ Add Process</button>
+            </form>
+            <div id="form-error" class="error"></div>
+            <div class="btn-row">
+              <button id="btn-sample" class="btn">Sample Data</button>
+              <button id="btn-random" class="btn">Random</button>
+              <button id="btn-clear" class="btn danger">Clear</button>
+            </div>
+
+            <h4>Process Table <span class="tag">Array</span></h4>
+            <div class="table-wrap">
+              <table id="proc-table" class="data-table compact">
+                <thead><tr><th>PID</th><th>AT</th><th>BT</th><th>Pri</th><th>I/O@</th><th>I/O</th><th></th></tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+
+            <h4>Process List <span class="tag">Linked List</span></h4>
+            <div id="ll-view" class="ll-view"></div>
+
+            <h3><span class="step">2</span> Choose Algorithm</h3>
+            <select id="algo-select"></select>
+            <div class="opt-row" id="opt-quantum"><label>Time Quantum <input id="quantum" type="number" min="1" value="2" /></label></div>
+            <div class="opt-row" id="opt-aging">
+              <label class="check"><input type="checkbox" id="aging" /> Priority Aging / Boost</label>
+              <label>every <input id="aging-interval" type="number" min="1" value="4" /> units</label>
+            </div>
+            <div class="opt-row"><label title="A process waiting continuously this long in the Ready queue is flagged as possibly starving">Starvation threshold <input id="starve-th" type="number" min="1" value="10" /></label></div>
+            <button id="btn-run" class="btn primary big">▶ Run &amp; Animate</button>
+          </aside>
+
+          <div class="stage-col">
+            <div class="panel stage-head">
+              <div id="algo-banner"></div>
+              <div class="clock"><span>TIME</span><b id="clock">0</b></div>
+            </div>
+
+            <div class="panel controls">
+              <button id="c-reset" class="btn icon" title="Restart (Home)"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><rect x="4" y="5" width="3" height="14"/><path d="M20 5v14L8 12z"/></svg></button>
+              <button id="c-back" class="btn icon" title="Step back (←)"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M18 5v14L6 12z"/></svg></button>
+              <button id="c-play" class="btn icon primary" title="Play / Pause (Space)"></button>
+              <button id="c-fwd" class="btn icon" title="Step forward (→)"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M6 5v14l12-7z"/></svg></button>
+              <button id="c-end" class="btn icon" title="Jump to end (End)"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M4 5v14l12-7z"/><rect x="17" y="5" width="3" height="14"/></svg></button>
+              <input id="scrubber" type="range" min="0" max="0" value="0" title="Drag to any time" />
+              <label class="speed">Speed <input id="speed" type="range" min="1" max="10" value="4" /></label>
+            </div>
+
+            <div class="panel stage" id="stage">
+              <div class="zone z-new"><h5><i class="dot s-new"></i>New <small>(not yet arrived)</small></h5><div class="zone-body" id="zone-new"></div></div>
+              <div class="zone z-ready">
+                <h5><i class="dot s-ready"></i>Ready Queue <span id="ready-ds" class="tag"></span></h5>
+                <div id="ready-view" class="ready-view"></div>
+                <div id="ready-array" class="ready-array"></div>
+              </div>
+              <div class="zone z-cpu"><h5><i class="dot s-running"></i>CPU · Running</h5><div id="cpu-box" class="cpu-box"></div></div>
+              <div class="zone z-wait"><h5><i class="dot s-waiting"></i>Waiting <small>(I/O)</small></h5><div class="zone-body" id="zone-wait"></div></div>
+              <div class="zone z-term"><h5><i class="dot s-terminated"></i>Terminated</h5><div class="zone-body" id="zone-term"></div></div>
+            </div>
+
+            <div class="panel narration">
+              <div>
+                <h5>What happens at <span id="narr-time">t = 0</span></h5>
+                <ul id="events" class="events"></ul>
+              </div>
+              <div>
+                <h5>Data-structure operations</h5>
+                <ul id="ds-ops" class="ds-ops"></ul>
+              </div>
+              <div>
+                <h5>Process state transitions</h5>
+                <div id="mini-states"></div>
+              </div>
+            </div>
+
+            <div class="panel">
+              <h4>Gantt Chart</h4>
+              <div class="gantt-scroll"><div id="gantt" class="gantt"></div></div>
+            </div>
+
+            <div class="panel">
+              <h4>Process State Timeline</h4>
+              <div id="timeline" class="timeline"></div>
+            </div>
+
+            <div class="panel">
+              <h4>Results</h4>
+              <div id="metrics" class="metric-cards"></div>
+              <div class="table-wrap">
+                <table id="results-table" class="data-table"></table>
+              </div>
+              <div id="starvation-report"></div>
+
+              <div class="save-sim-bar">
+                <input id="sim-save-name" type="text" placeholder="Simulation name (e.g. Lab 3 - MLFQ Test)" />
+                <button id="btn-save-sim" class="btn primary" type="button">💾 Save Simulation</button>
+                <button id="btn-download-pdf" class="btn" type="button">📄 Save &amp; Download PDF</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ======================= COMPARE ======================= -->
+      <section id="tab-compare" class="tab">
+        <div class="panel">
+          <h3>Compare all 10 scheduling algorithms</h3>
+          <p class="muted">Runs every algorithm on the processes from the Simulator tab using identical quantum, aging, and starvation settings.</p>
+          <button id="btn-compare" class="btn primary">Run Comparison</button>
+        </div>
+        <div class="panel" id="compare-charts-panel">
+          <h4>Interactive Performance Analytics</h4>
+          <div class="two-col-grid">
+            <div class="chart-box"><canvas id="chart-compare-times"></canvas></div>
+            <div class="chart-box"><canvas id="chart-compare-util"></canvas></div>
+          </div>
+        </div>
+        <div id="compare-out"></div>
+      </section>
+
+      <!-- ======================= USER DASHBOARD & HISTORY ======================= -->
+      <section id="tab-dashboard" class="tab">
+        <div id="dash-guest-notice" class="panel hidden">
+          <h3>User Dashboard &amp; Simulation History</h3>
+          <p class="muted">Sign in to save simulations to PostgreSQL/Django, view personal analytics, compare historical runs, and download PDF reports.</p>
+          <a href="login.html" class="btn primary" style="text-decoration:none; display:inline-block;">Sign In / Create Account</a>
+        </div>
+        <div id="dash-auth-content" class="hidden">
+          <div class="stat-grid" id="dash-stats-grid"></div>
+          <div class="two-col-grid">
+            <div class="panel">
+              <h3>Recently Used Algorithms</h3>
+              <div id="dash-recent-algos"></div>
+            </div>
+            <div class="panel">
+              <h3>Profile &amp; Account Settings</h3>
+              <div id="dash-profile-box"></div>
+            </div>
+          </div>
+          <div class="panel">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem; margin-bottom:0.6rem;">
+              <h3 style="margin:0;">Saved Simulation History</h3>
+              <div class="btn-row" style="margin:0;">
+                <button id="btn-compare-saved" class="btn small" type="button">Compare Selected (2)</button>
+                <button id="btn-refresh-dash" class="btn small" type="button">↻ Refresh</button>
+              </div>
+            </div>
+            <div id="saved-compare-result" class="hidden" style="margin-bottom:1rem;"></div>
+            <div class="table-wrap">
+              <table class="data-table" id="dash-history-table"></table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ======================= LEARN ======================= -->
+      <section id="tab-learn" class="tab">
+        <div class="panel">
+          <h3>Scheduling algorithms at a glance</h3>
+          <p class="muted">Click any card for a detailed explanation, pseudocode, pros &amp; cons, complexity, and an animated worked example.</p>
+          <div id="learn-cards" class="learn-cards"></div>
+        </div>
+        <div class="panel">
+          <h3>Quick comparison</h3>
+          <div class="table-wrap"><table id="learn-table" class="data-table"></table></div>
+        </div>
+        <div id="learn-detail"></div>
+        <div class="panel" id="starvation-section"></div>
+        <div class="panel">
+          <h3>Practice Questions</h3>
+          <div id="practice-quiz-box"></div>
+        </div>
+        <div class="panel">
+          <h3>Viva Questions &amp; Answers</h3>
+          <div id="viva-qa-box"></div>
+        </div>
+      </section>
+
+      <!-- ======================= DSA ======================= -->
+      <section id="tab-dsa" class="tab">
+        <div class="panel">
+          <h3>Data structures used in this project</h3>
+          <div id="dsa-cards" class="dsa-cards"></div>
+        </div>
+        <div class="playgrounds">
+          <div class="panel">
+            <h3>Queue playground <span class="tag">FCFS / Round Robin</span></h3>
+            <div class="btn-row">
+              <button id="pq-enq" class="btn primary">Enqueue P<span id="q-next">1</span></button>
+              <button id="pq-deq" class="btn">Dequeue</button>
+              <button id="pq-rot" class="btn">Round-Robin rotate</button>
+            </div>
+            <div id="q-play" class="ready-view"></div>
+            <div id="q-log" class="play-log"></div>
+          </div>
+          <div class="panel">
+            <h3>Min-Heap / Priority Queue playground <span class="tag">SJF / SRTF / Priority</span></h3>
+            <div class="btn-row">
+              <input id="h-val" type="number" min="0" value="5" class="small-input" title="key (burst / priority)" />
+              <button id="h-ins" class="btn primary">Insert</button>
+              <button id="h-ext" class="btn">Extract-Min</button>
+              <button id="h-rand" class="btn">Insert random</button>
+            </div>
+            <div id="h-play" class="ready-view heap-view"></div>
+            <div id="h-arr" class="ready-array"></div>
+            <div id="h-log" class="play-log"></div>
+          </div>
+        </div>
+        <div class="panel">
+          <h3>Process states</h3>
+          <div class="states-grid">
+            <div id="state-diagram"></div>
+            <div id="state-list"></div>
+          </div>
+        </div>
+        <div class="panel">
+          <h3>Formulas</h3>
+          <div class="table-wrap"><table id="formula-table" class="data-table"></table></div>
+        </div>
+      </section>
+
+      <!-- ======================= ADMIN DASHBOARD ======================= -->
+      <section id="tab-admin" class="tab">
+        <div class="stat-grid" id="admin-stats-grid"></div>
+        <div class="two-col-grid">
+          <div class="panel">
+            <h3>Algorithm Usage Statistics</h3>
+            <div class="chart-box"><canvas id="chart-admin-algos"></canvas></div>
+          </div>
+          <div class="panel">
+            <h3>Recent Platform Activity</h3>
+            <div class="table-wrap"><table class="data-table" id="admin-activity-table"></table></div>
+          </div>
+        </div>
+        <div class="panel">
+          <h3>User Management</h3>
+          <div class="table-wrap"><table class="data-table" id="admin-users-table"></table></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div id="toast-stack" class="toast-stack"></div>
+
+  <footer>CPU Process Scheduling Simulator · Full-Stack Operating Systems &amp; Data Structures Platform</footer>
+
+  <script src="js/auth.js"></script>
+  <script src="js/ds.js"></script>
+  <script src="js/algorithms.js"></script>
+  <script src="js/info.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/platform.js"></script>
+</body>
+</html>

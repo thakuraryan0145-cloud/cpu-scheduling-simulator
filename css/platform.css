@@ -1,0 +1,306 @@
+/* =========================================================================
+ * platform.css — Sidebar layout, Light/Dark themes, Dashboard, Admin,
+ * Chart.js containers, Practice Quiz, Viva Q&A, and Toast notifications.
+ * ========================================================================= */
+
+/* ---------- Light Theme Variables ---------- */
+[data-theme="light"] {
+  --bg: #f1f5f9;
+  --bg2: #ffffff;
+  --panel: #ffffff;
+  --panel2: #f8fafc;
+  --line: #cbd5e1;
+  --text: #0f172a;
+  --muted: #475569;
+  --accent: #4f46e5;
+  --accent2: #059669;
+  --danger: #dc2626;
+  --warn: #d97706;
+}
+
+[data-theme="light"] html,
+[data-theme="light"] body {
+  background: radial-gradient(1200px 600px at 10% -10%, #e0e7ff 0%, var(--bg) 60%) fixed;
+}
+
+[data-theme="light"] .topbar,
+[data-theme="light"] .sidebar {
+  background: rgba(255, 255, 255, 0.92);
+}
+
+[data-theme="light"] .panel {
+  background: var(--panel);
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+}
+
+[data-theme="light"] h4 {
+  color: #1e293b;
+}
+
+/* ---------- App Shell with Sidebar ---------- */
+.app-shell {
+  display: flex;
+  min-height: calc(100vh - 64px);
+}
+
+.sidebar {
+  width: 235px;
+  flex-shrink: 0;
+  background: rgba(17, 24, 46, 0.85);
+  border-right: 1px solid var(--line);
+  padding: 1rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  position: sticky;
+  top: 64px;
+  height: calc(100vh - 64px);
+  overflow-y: auto;
+  transition: transform 0.25s ease;
+  z-index: 40;
+}
+
+.sidebar-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  padding: 0.65rem 0.75rem 0.25rem;
+  font-weight: 700;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--muted);
+  padding: 0.6rem 0.8rem;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.88rem;
+  transition: all 0.15s ease;
+}
+
+.nav-item:hover {
+  color: var(--text);
+  background: rgba(108, 140, 255, 0.08);
+}
+
+.nav-item.active {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(108, 140, 255, 0.35);
+}
+
+.main-content {
+  flex: 1;
+  min-width: 0;
+  padding: 1.2rem;
+  max-width: 1600px;
+  margin: 0 auto;
+}
+
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.mobile-menu-btn {
+  display: none;
+}
+
+@media (max-width: 960px) {
+  .mobile-menu-btn {
+    display: inline-grid;
+  }
+  .sidebar {
+    position: fixed;
+    left: 0;
+    top: 60px;
+    height: calc(100vh - 60px);
+    transform: translateX(-100%);
+    box-shadow: 8px 0 30px rgba(0, 0, 0, 0.4);
+  }
+  .sidebar.open {
+    transform: translateX(0);
+  }
+}
+
+/* ---------- Dashboard & Admin Grid ---------- */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 0.9rem;
+  margin-bottom: 1rem;
+}
+
+.stat-card {
+  background: var(--bg2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.stat-card .stat-label {
+  font-size: 0.78rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.stat-card .stat-val {
+  font-size: 1.55rem;
+  font-weight: 800;
+  color: var(--accent2);
+}
+
+.two-col-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.save-sim-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  margin-top: 0.9rem;
+  padding-top: 0.9rem;
+  border-top: 1px dashed var(--line);
+}
+
+.save-sim-bar input[type="text"] {
+  flex: 1;
+  min-width: 200px;
+  background: var(--bg2);
+  border: 1px solid var(--line);
+  color: var(--text);
+  border-radius: 8px;
+  padding: 0.45rem 0.7rem;
+  font-size: 0.88rem;
+}
+
+/* ---------- Chart.js Containers ---------- */
+.chart-box {
+  position: relative;
+  height: 300px;
+  width: 100%;
+}
+
+/* ---------- Practice Quiz & Viva Q&A ---------- */
+.quiz-card {
+  background: var(--bg2);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 0.9rem 1rem;
+  margin-bottom: 0.8rem;
+}
+
+.quiz-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 0.45rem;
+  margin-top: 0.6rem;
+}
+
+.quiz-opt {
+  text-align: left;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  color: var(--text);
+  padding: 0.45rem 0.7rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.84rem;
+}
+
+.quiz-opt.correct {
+  border-color: var(--accent2);
+  background: rgba(67, 217, 173, 0.16);
+}
+
+.quiz-opt.wrong {
+  border-color: var(--danger);
+  background: rgba(255, 107, 129, 0.16);
+}
+
+.viva-item {
+  border-bottom: 1px solid var(--line);
+  padding: 0.65rem 0;
+}
+
+.viva-item summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.viva-item p {
+  margin: 0.45rem 0 0;
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+/* ---------- Toast Notifications ---------- */
+.toast-stack {
+  position: fixed;
+  bottom: 1.2rem;
+  right: 1.2rem;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.toast {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--accent);
+  color: var(--text);
+  padding: 0.7rem 1rem;
+  border-radius: 10px;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
+  font-size: 0.86rem;
+  max-width: 340px;
+  animation: fadeIn 0.2s ease;
+}
+
+.toast.success { border-left-color: var(--accent2); }
+.toast.error { border-left-color: var(--danger); }
+
+.badge-role {
+  display: inline-block;
+  padding: 0.12rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  background: rgba(108, 140, 255, 0.18);
+  color: var(--accent);
+  border: 1px solid rgba(108, 140, 255, 0.35);
+}
+
+.badge-verified {
+  background: rgba(67, 217, 173, 0.15);
+  color: var(--accent2);
+  border-color: rgba(67, 217, 173, 0.35);
+}
+
+.badge-unverified {
+  background: rgba(255, 181, 71, 0.15);
+  color: var(--warn);
+  border-color: rgba(255, 181, 71, 0.35);
+}
+
+.hidden { display: none !important; }
